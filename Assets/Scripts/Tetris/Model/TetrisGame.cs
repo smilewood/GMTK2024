@@ -46,6 +46,15 @@ public class TetrisGame
       return TryMoveActivePiece(Vector2Int.down);
    }
 
+   public bool RotatePieceLeft()
+   {
+      return TryRotateActivePiece(true);
+   }
+   public bool RotatePieceright()
+   {
+      return TryRotateActivePiece(false);
+   }
+
    public IEnumerator GameLoop()
    {
       //Add initial piece, this needs to be changed to allow no active piece on a given board
@@ -74,7 +83,11 @@ public class TetrisGame
 
    private void CreateNewPiece()
    {
-      ActivePiece = new TetrisPiece(TetrisShape.O, new Vector2Int(TetrisBoard.BoardSize.x / 2, 20));
+      //TODO: Random system needs work
+
+      TetrisShape nextShape = UnityEngine.Random.Range(0, 2) == 1 ? TetrisShape.O : TetrisShape.T;
+
+      ActivePiece = new TetrisPiece(nextShape, new Vector2Int(TetrisBoard.BoardSize.x / 2, 18));
       foreach ((Vector2Int pos, Square s) in ActivePiece.squares)
       {
          OnSquareAdded.Invoke(pos, s);
@@ -84,20 +97,63 @@ public class TetrisGame
    private bool TryMoveActivePiece(Vector2Int direction)
    {
       TetrisPiece newPiece = ActivePiece.GetPieceMoved(direction);
-      foreach((Vector2Int pos, _) in newPiece.squares)
+      if (CheckLocationIsValid(newPiece))
       {
-         if(pos.y < 0 || pos.x < 0 || pos.x >= TetrisBoard.BoardSize.x || !board.SpaceIsFree(pos))
+         //piece moved sucuessfully
+         UpdateActivePiece(newPiece);
+         return true;
+      }
+      return false;
+   }
+
+
+   private bool TryRotateActivePiece(bool left)
+   {
+      TetrisPiece rotatedPiece = ActivePiece.GetPieceRotated(left);
+      if (CheckLocationIsValid(rotatedPiece))
+      {
+         UpdateActivePiece(rotatedPiece);
+         return true;
+      }
+      else
+      {
+         //Wall-kick left
+         TetrisPiece kickedPiece = rotatedPiece.GetPieceMoved(Vector2Int.left);
+         if (CheckLocationIsValid(kickedPiece))
+         {
+            UpdateActivePiece(kickedPiece);
+            return true;
+         }
+         //Wall-kick right
+         kickedPiece = rotatedPiece.GetPieceMoved(Vector2Int.right);
+         if (CheckLocationIsValid(kickedPiece))
+         {
+            UpdateActivePiece(kickedPiece);
+            return true;
+         }
+      }
+      return false;
+   }
+
+   private bool CheckLocationIsValid(TetrisPiece pieceToCheck)
+   {
+      foreach ((Vector2Int pos, _) in pieceToCheck.squares)
+      {
+         if (pos.y < 0 || pos.x < 0 || pos.x >= TetrisBoard.BoardSize.x || !board.SpaceIsFree(pos))
          {
             return false;
          }
       }
+      return true;
+   }
 
-      //piece moved sucuessfully
+   private void UpdateActivePiece(TetrisPiece newPiece)
+   {
       for (int i = 0; i < 4; ++i)
       {
          OnSquareMoved.Invoke(ActivePiece.squares[i].Item2, newPiece.squares[i].Item1);
       }
       ActivePiece = newPiece;
-      return true;
    }
+
 }

@@ -43,7 +43,10 @@ public class TetrisGameView : MonoBehaviour
       {
          game.MovePieceDown();
       }
-
+      if (Input.GetKeyDown(KeyCode.UpArrow))
+      {
+         game.RotatePieceLeft();
+      }
    }
 
 

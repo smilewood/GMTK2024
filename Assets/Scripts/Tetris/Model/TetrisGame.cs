@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -13,18 +14,23 @@ public class TetrisGame
 {
    public TetrisPiece ActivePiece;
    public TetrisBoard board;
-   public bool GameOver;
+   public static bool GameOver;
 
    public float tps = 2;
 
    public OnSquareAdded OnSquareAdded;
    public OnSquareMoved OnSquareMoved;
    public OnSquareRemoved OnSquareRemoved;
-   private PieceBag pieceBag;
+   private static PieceBag pieceBag;
+   public static TetrisShape NextPiece
+   {
+      get; private set;
+   }
+
    public TetrisGame()
    {
       board = new TetrisBoard();
-      pieceBag = new PieceBag();
+      pieceBag ??= new PieceBag();
       OnSquareAdded = new OnSquareAdded();
       OnSquareMoved = new OnSquareMoved();
       OnSquareRemoved = new OnSquareRemoved();
@@ -33,11 +39,12 @@ public class TetrisGame
       board.SquareRemoved.AddListener(s => OnSquareRemoved.Invoke(s));
    }
 
+   public int BoardWeight => board.SquareCount;
+
    public bool MovePieceLeft()
    {
       return TryMoveActivePiece(Vector2Int.left);
    }
-
    public bool MovePieceRight()
    {
       return TryMoveActivePiece(Vector2Int.right);
@@ -46,7 +53,6 @@ public class TetrisGame
    {
       return TryMoveActivePiece(Vector2Int.down);
    }
-
    public bool RotatePieceLeft()
    {
       return TryRotateActivePiece(true);
@@ -56,43 +62,77 @@ public class TetrisGame
       return TryRotateActivePiece(false);
    }
 
+   public void RemoveAllBoxes()
+   {
+      board.ClearBoard();
+   }
+
+
    public IEnumerator GameLoop()
    {
-      //Add initial piece, this needs to be changed to allow no active piece on a given board
-      CreateNewPiece();
-
       while (!GameOver)
       {
-         if (MovePieceDown())
+         if (ActivePiece is not null)
          {
-            //TODO: intentionally empty in case I need this later
-         }
-         else
-         {
-            //The piece is at the bottom
-            foreach ((Vector2Int pos, Square s) in ActivePiece.squares)
+            if (MovePieceDown())
             {
-               board.FillSquare(pos, s);
+               //TODO: intentionally empty in case I need this later
             }
-
-            CreateNewPiece();
+            else
+            {
+               //The piece is at the bottom
+               foreach ((Vector2Int pos, Square s) in ActivePiece.squares)
+               {
+                  board.FillSquare(pos, s);
+               }
+               ActivePiece = null;
+               if (!TryAddActivePiece(GetNextPiece()))
+               {
+                  //No room to add a piece
+                  MenuFunctions.Instance.ShowMenu("Game Over");
+                  GameOver = true;
+               }
+            }
+            board.CheckForTetris();
          }
-         board.CheckForTetris();
          yield return new WaitForSeconds(1f / tps);
       }
    }
 
-   private void CreateNewPiece()
+   public TetrisPiece RemoveActivePiece()
    {
-      //TODO: Random system needs work
-
-      TetrisShape nextShape = pieceBag.NextShape;
-
-      ActivePiece = new TetrisPiece(nextShape, new Vector2Int(TetrisBoard.BoardSize.x / 2, 18));
-      foreach ((Vector2Int pos, Square s) in ActivePiece.squares)
+      TetrisPiece res = ActivePiece;
+      if(res is null)
       {
-         OnSquareAdded.Invoke(pos, s);
+         return null;
       }
+      foreach ((_, Square s) in ActivePiece.squares)
+      {
+         OnSquareRemoved.Invoke(s);
+      }
+      ActivePiece = null;
+      return res;
+   }
+
+   public bool TryAddActivePiece(TetrisPiece newPiece)
+   {
+      if (ActivePiece is null && CheckLocationIsValid(newPiece))
+      {
+         ActivePiece = newPiece;
+         foreach ((Vector2Int pos, Square s) in ActivePiece.squares)
+         {
+            OnSquareAdded.Invoke(pos, s);
+         }
+         return true;
+      }
+      return false;
+   }
+
+   public static TetrisPiece GetNextPiece()
+   {
+      TetrisShape nextShape = pieceBag.RemoveNextShape;
+
+      return new TetrisPiece(nextShape, new Vector2Int(TetrisBoard.BoardSize.x / 2, 18));
    }
 
    private bool TryMoveActivePiece(Vector2Int direction)
@@ -179,7 +219,18 @@ public class TetrisGame
          bag = new Queue<TetrisShape>();
       }
 
-      public TetrisShape NextShape
+      public TetrisShape PeekNextShape
+      {
+         get
+         {
+            if (!bag.Any())
+            {
+               FillBag();
+            }
+            return bag.Peek();
+         }
+      }
+      public TetrisShape RemoveNextShape
       {
          get
          {

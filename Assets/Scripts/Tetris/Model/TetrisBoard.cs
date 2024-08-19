@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -10,7 +11,7 @@ public class TetrisBoard
 
    public OnSquareMoved SquareMoved;
    public OnSquareRemoved SquareRemoved;
-
+   private int filledSquares = 0;
    private Square[,] gameBoard;
 
    public TetrisBoard()
@@ -19,6 +20,8 @@ public class TetrisBoard
       SquareRemoved = new OnSquareRemoved();
       gameBoard = new Square[BoardSize.x, BoardSize.y];
    }
+
+   public int SquareCount => filledSquares;
 
    public bool SpaceIsFree(Vector2Int position)
    {
@@ -32,6 +35,7 @@ public class TetrisBoard
    public void FillSquare(Vector2Int pos, Square s)
    {
       gameBoard[pos.x, pos.y] = s;
+      ++filledSquares;
    }
 
    public void CheckForTetris()
@@ -56,6 +60,7 @@ public class TetrisBoard
             {
                SquareRemoved.Invoke(gameBoard[j, i]);
                gameBoard[j, i] = null;
+               --filledSquares;
             }
             //Move everything down
             for (int y = i; y < BoardSize.y; ++y)
@@ -72,5 +77,22 @@ public class TetrisBoard
             --i;
          }
       }
+   }
+
+   public void ClearBoard()
+   {
+      for(int i = 0; i < BoardSize.x; ++i)
+      {
+         for(int j = 0; j < BoardSize.y; ++j)
+         {
+            if (gameBoard[i,j] is Square s)
+            {
+               SquareRemoved.Invoke(s);
+               gameBoard[i, j] = null;
+               --filledSquares;
+            }
+         }
+      }
+      Debug.Assert(filledSquares == 0, "Everything should have been cleared");
    }
 }

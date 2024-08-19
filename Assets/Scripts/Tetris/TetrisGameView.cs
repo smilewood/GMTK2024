@@ -12,43 +12,57 @@ public class TetrisGameView : MonoBehaviour
    private TetrisGame game;
    private Vector2 scaleFactor;
 
-   // Start is called before the first frame update
-   void Start()
+   private void Awake()
    {
       squares = new Dictionary<int, RectTransform>();
       myTransform = GetComponent<RectTransform>();
       scaleFactor = new Vector2(myTransform.rect.width / TetrisBoard.BoardSize.x, myTransform.rect.height / TetrisBoard.BoardSize.y);
-      
+
       game = new TetrisGame();
 
       game.OnSquareAdded.AddListener(AddSquare);
       game.OnSquareMoved.AddListener((s, pos) => MoveSquare(s.ID, pos));
       game.OnSquareRemoved.AddListener(s => ClearSquare(s.ID));
+   }
 
+   public int BoardWeight => game.BoardWeight;
+
+   public bool MovePieceLeft()
+   {
+      return game.MovePieceLeft();
+   }
+   public bool MovePieceRight()
+   {
+      return game.MovePieceRight();
+   }
+   public bool MovePieceDown()
+   {
+      return game.MovePieceDown();
+   }
+   public bool RotatePieceLeft()
+   {
+      return game.RotatePieceLeft();
+   }
+   public bool RotatePieceright()
+   {
+      return game.RotatePieceright();
+   }
+   public TetrisPiece RemoveActivePiece()
+   {
+      return game.RemoveActivePiece();
+   }
+   public bool TryAddActivePiece(TetrisPiece newPiece)
+   {
+      return game.TryAddActivePiece(newPiece);
+   }
+   public void RemoveAllBoxes()
+   {
+      game.RemoveAllBoxes();
+   }
+   public void StartGame()
+   {
       StartCoroutine(game.GameLoop());
    }
-
-   private void Update()
-   {
-      //TODO move cooldown?
-      if (Input.GetKeyDown(KeyCode.LeftArrow))
-      {
-         game.MovePieceLeft();
-      }
-      if (Input.GetKeyDown(KeyCode.RightArrow))
-      {
-         game.MovePieceRight();
-      }
-      if (Input.GetKey(KeyCode.DownArrow))
-      {
-         game.MovePieceDown();
-      }
-      if (Input.GetKeyDown(KeyCode.UpArrow))
-      {
-         game.RotatePieceLeft();
-      }
-   }
-
 
    public void AddSquare(Vector2Int gridPosition, Square addedSquare)
    {

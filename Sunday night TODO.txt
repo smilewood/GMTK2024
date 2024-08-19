@@ -1,0 +1,24 @@
+todo: 
+* bugs
+	- yelling about spawnning tiles above the board
+* 2 boards
+	- control one at a time
+	- swap between them
+* balance
+	- the more squares a board has the heavier it is. Tilt the scale and move the boards
+* game over
+	- either fill a board or tip the scale
+* Next tile indicator
+* Graphics 
+	- boards
+	- scale
+	- background
+	- other UI
+* score?
+	- points for clearing lines? 
+	- points for being in balance?
+* VS mode
+* speed up over time
+* main menu
+	- instructions
+* high score tracking (local only obviously)

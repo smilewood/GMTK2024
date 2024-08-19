@@ -34,10 +34,10 @@ public class Square
       {
          PieceColor.LightBlue => Color.cyan,
          PieceColor.DarkBlue => Color.blue,
-         PieceColor.Orange => new Color(255, 127, 0),
+         PieceColor.Orange => new Color(1, .5f, 0),
          PieceColor.Yellow => Color.yellow,
          PieceColor.Green => Color.green,
-         PieceColor.Purple => new Color(128, 0, 128),
+         PieceColor.Purple => new Color(.5f, 0, .5f),
          PieceColor.Red => Color.red,
          _ => throw new ArgumentException("Unknown Color was added to the enum."),
       };

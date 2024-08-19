@@ -36,9 +36,8 @@ public class TetrisPiece
 
    private void InitializeShape(Vector2Int position)
    {
-      Vector2Int[] offsets = rotationNone;
-      PieceColor color = PieceColor.DarkBlue;
-
+      Vector2Int[] offsets;
+      PieceColor color;
       switch (this.shape)
       {
          case TetrisShape.O:
@@ -114,9 +113,9 @@ public class TetrisPiece
 
    public TetrisPiece GetPieceRotated(bool left)
    {
-      Vector2Int[] offsets = rotationNone;
       int rotationIndex = (this.rotation + (left ? 1 : -1)) % 4;
 
+      Vector2Int[] offsets;
       switch (shape)
       {
          case TetrisShape.O:
@@ -153,6 +152,10 @@ public class TetrisPiece
          {
             offsets = rotationsI[rotationIndex];
             break;
+         }
+         default:
+         {
+            throw new ArgumentException("How did we get an unknown shape?");
          }
       }
 

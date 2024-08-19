@@ -9,12 +9,14 @@ using UnityEngine.Events;
 public class OnSquareMoved : UnityEvent<Square, Vector2Int> {}
 public class OnSquareAdded : UnityEvent<Vector2Int, Square> {}
 public class OnSquareRemoved : UnityEvent<Square> {}
+public class NextPieceUpdated : UnityEvent<TetrisShape> {}
 
 public class TetrisGame
 {
    public TetrisPiece ActivePiece;
    public TetrisBoard board;
    public static bool GameOver;
+   public static NextPieceUpdated NextPieceUpdated;
 
    public float tps = 2;
 
@@ -34,7 +36,7 @@ public class TetrisGame
       OnSquareAdded = new OnSquareAdded();
       OnSquareMoved = new OnSquareMoved();
       OnSquareRemoved = new OnSquareRemoved();
-
+      NextPieceUpdated ??= new NextPieceUpdated();
       board.SquareMoved.AddListener((a, b) => OnSquareMoved.Invoke(a, b));
       board.SquareRemoved.AddListener(s => OnSquareRemoved.Invoke(s));
    }
@@ -238,7 +240,9 @@ public class TetrisGame
             {
                FillBag();
             }
-            return bag.Dequeue();
+            TetrisShape nextShape = bag.Dequeue();
+            TetrisGame.NextPieceUpdated.Invoke(PeekNextShape);
+            return nextShape;
          }
       }
 

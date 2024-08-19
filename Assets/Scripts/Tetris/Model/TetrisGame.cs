@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -19,11 +20,11 @@ public class TetrisGame
    public OnSquareAdded OnSquareAdded;
    public OnSquareMoved OnSquareMoved;
    public OnSquareRemoved OnSquareRemoved;
-
+   private PieceBag pieceBag;
    public TetrisGame()
    {
       board = new TetrisBoard();
-
+      pieceBag = new PieceBag();
       OnSquareAdded = new OnSquareAdded();
       OnSquareMoved = new OnSquareMoved();
       OnSquareRemoved = new OnSquareRemoved();
@@ -85,7 +86,7 @@ public class TetrisGame
    {
       //TODO: Random system needs work
 
-      TetrisShape nextShape = UnityEngine.Random.Range(0, 2) == 1 ? TetrisShape.O : TetrisShape.T;
+      TetrisShape nextShape = pieceBag.NextShape;
 
       ActivePiece = new TetrisPiece(nextShape, new Vector2Int(TetrisBoard.BoardSize.x / 2, 18));
       foreach ((Vector2Int pos, Square s) in ActivePiece.squares)
@@ -109,23 +110,21 @@ public class TetrisGame
 
    private bool TryRotateActivePiece(bool left)
    {
-      TetrisPiece rotatedPiece = ActivePiece.GetPieceRotated(left);
-      if (CheckLocationIsValid(rotatedPiece))
+      if(ActivePiece.shape == TetrisShape.O)
       {
-         UpdateActivePiece(rotatedPiece);
          return true;
       }
-      else
+
+      TetrisPiece rotatedPiece = ActivePiece.GetPieceRotated(left);
+      int mult = ActivePiece.shape == TetrisShape.I ? 2 : 1;
+      Vector2Int[] initialStateOffsets = offsetTable[ActivePiece.rotation * mult];
+      Vector2Int[] newStateOffsets = offsetTable[rotatedPiece.rotation * mult];
+
+      for (int i = 0; i < 5; ++i) 
       {
-         //Wall-kick left
-         TetrisPiece kickedPiece = rotatedPiece.GetPieceMoved(Vector2Int.left);
-         if (CheckLocationIsValid(kickedPiece))
-         {
-            UpdateActivePiece(kickedPiece);
-            return true;
-         }
-         //Wall-kick right
-         kickedPiece = rotatedPiece.GetPieceMoved(Vector2Int.right);
+         Vector2Int translation = newStateOffsets[i] - initialStateOffsets[i];
+         TetrisPiece kickedPiece = rotatedPiece.GetPieceMoved(translation);
+
          if (CheckLocationIsValid(kickedPiece))
          {
             UpdateActivePiece(kickedPiece);
@@ -133,6 +132,7 @@ public class TetrisGame
          }
       }
       return false;
+
    }
 
    private bool CheckLocationIsValid(TetrisPiece pieceToCheck)
@@ -154,6 +154,57 @@ public class TetrisGame
          OnSquareMoved.Invoke(ActivePiece.squares[i].Item2, newPiece.squares[i].Item1);
       }
       ActivePiece = newPiece;
+   }
+
+
+   private static readonly Vector2Int[][] offsetTable =
+   {
+     /*0*/    new Vector2Int[]{Vector2Int.zero, Vector2Int.zero, Vector2Int.zero, Vector2Int.zero, Vector2Int.zero},
+     /*R*/    new Vector2Int[]{Vector2Int.zero, Vector2Int.right, new Vector2Int(1,-1), new Vector2Int(0, 2), new Vector2Int(1,2)},
+     /*2*/    new Vector2Int[]{Vector2Int.zero, Vector2Int.zero, Vector2Int.zero, Vector2Int.zero, Vector2Int.zero},
+     /*L*/    new Vector2Int[]{Vector2Int.zero, Vector2Int.left, new Vector2Int(-1,-1), new Vector2Int(0, 2), new Vector2Int(-1,2)},
+   
+     /*0*/    new Vector2Int[]{Vector2Int.zero, Vector2Int.left, new Vector2Int(2, 0), Vector2Int.left, new Vector2Int(2, 0)},
+     /*R*/    new Vector2Int[]{Vector2Int.left, Vector2Int.zero, Vector2Int.zero, Vector2Int.right, new Vector2Int(0,-2)},
+     /*2*/    new Vector2Int[]{ new Vector2Int(1,1), new Vector2Int(1, 1), new Vector2Int(-1, 1), Vector2Int.right, new Vector2Int(-2,0)},
+     /*L*/    new Vector2Int[]{Vector2Int.right, Vector2Int.right, Vector2Int.right, Vector2Int.left, new Vector2Int(0,-2)}
+   };
+
+   private class PieceBag
+   {
+      private Queue<TetrisShape> bag;
+
+      public PieceBag()
+      {
+         bag = new Queue<TetrisShape>();
+      }
+
+      public TetrisShape NextShape
+      {
+         get
+         {
+            if (!bag.Any())
+            {
+               FillBag();
+            }
+            return bag.Dequeue();
+         }
+      }
+
+
+      private void FillBag()
+      {
+         TetrisShape[] pieces = (TetrisShape[])Enum.GetValues(typeof(TetrisShape));
+         for(int i = 0; i < pieces.Length - 2; ++i)
+         {
+            int j = UnityEngine.Random.Range(i, pieces.Length);
+            (pieces[i], pieces[j]) = (pieces[j], pieces[i]);
+         }
+         foreach(TetrisShape s in pieces)
+         {
+            bag.Enqueue(s);
+         }
+      }
    }
 
 }

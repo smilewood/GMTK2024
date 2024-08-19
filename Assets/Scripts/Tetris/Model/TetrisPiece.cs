@@ -20,7 +20,10 @@ public class TetrisPiece
 {
    public (Vector2Int, Square)[] squares;
    public TetrisShape shape;
-   private int rotation;
+   public int rotation
+   {
+      get; private set;
+   }
    private TetrisPiece(TetrisShape shape)
    {
       this.shape = shape;
@@ -76,6 +79,8 @@ public class TetrisPiece
          }
          case TetrisShape.I:
          {
+            offsets = rotationsI[0];
+            color = PieceColor.LightBlue;
             break;
          }
          default:
@@ -146,6 +151,7 @@ public class TetrisPiece
          }
          case TetrisShape.I:
          {
+            offsets = rotationsI[rotationIndex];
             break;
          }
       }
@@ -154,7 +160,6 @@ public class TetrisPiece
       {
          rotation = rotationIndex
       };
-      Debug.Log(rotationIndex);
 
       Vector2Int origin = this.squares[0].Item1;
       newPiece.squares[0] = (origin + offsets[0], this.squares[0].Item2);
@@ -202,6 +207,14 @@ public class TetrisPiece
       new Vector2Int[]{Vector2Int.zero,Vector2Int.down, Vector2Int.right, new Vector2Int(1,1) },
       new Vector2Int[]{Vector2Int.zero,Vector2Int.down, Vector2Int.left, new Vector2Int(1,-1) },
       new Vector2Int[]{Vector2Int.zero,Vector2Int.up, Vector2Int.left, new Vector2Int(-1,-1) }
+   };
+
+   private static readonly Vector2Int[][] rotationsI =
+   {
+      new Vector2Int[]{Vector2Int.zero,Vector2Int.left, Vector2Int.right, new Vector2Int(2,0) },
+      new Vector2Int[]{Vector2Int.zero,Vector2Int.up, Vector2Int.down, new Vector2Int(0,-2) },
+      new Vector2Int[]{Vector2Int.zero,Vector2Int.left, Vector2Int.right, new Vector2Int(-2,0) },
+      new Vector2Int[]{Vector2Int.zero,Vector2Int.up, Vector2Int.down, new Vector2Int(0,2) }
    };
 
    #endregion

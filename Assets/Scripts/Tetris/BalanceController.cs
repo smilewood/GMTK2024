@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 public class BalanceController : MonoBehaviour
 {
-   public RectTransform LeftObjects, RightObjects, BalanceArm;
+   public RectTransform LeftObjects, RightObjects;//, BalanceArm;
    public float MaxOffsetDistance, MaxArmAngle;
    public float MaxWeightDiference;
    public TetrisGameView LeftGame, RightGame;
@@ -27,10 +27,10 @@ public class BalanceController : MonoBehaviour
 
       float ratio = diference / MaxWeightDiference;
       float offset = ratio * MaxOffsetDistance;
-      float targetAngle = ratio * MaxArmAngle;
+      //float targetAngle = ratio * MaxArmAngle;
 
       LeftObjects.anchoredPosition = Vector2.Lerp(LeftObjects.anchoredPosition, new Vector2(LeftObjects.anchoredPosition.x, offset), ScaleSpeed * Time.deltaTime);
       RightObjects.anchoredPosition = Vector2.Lerp(RightObjects.anchoredPosition, new Vector2(RightObjects.anchoredPosition.x, -offset), ScaleSpeed * Time.deltaTime);
-      BalanceArm.rotation = Quaternion.Lerp(BalanceArm.rotation, Quaternion.Euler(0, 0, targetAngle), ScaleSpeed * Time.deltaTime);
+      //BalanceArm.rotation = Quaternion.Lerp(BalanceArm.rotation, Quaternion.Euler(0, 0, targetAngle), ScaleSpeed * Time.deltaTime);
    }
 }

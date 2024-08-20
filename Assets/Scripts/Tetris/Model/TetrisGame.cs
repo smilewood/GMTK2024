@@ -10,6 +10,7 @@ public class OnSquareMoved : UnityEvent<Square, Vector2Int> {}
 public class OnSquareAdded : UnityEvent<Vector2Int, Square> {}
 public class OnSquareRemoved : UnityEvent<Square> {}
 public class NextPieceUpdated : UnityEvent<TetrisShape> {}
+public class LinesCleared : UnityEvent<int> {}
 
 public class TetrisGame
 {
@@ -18,12 +19,14 @@ public class TetrisGame
    public static bool GameOver;
    public static NextPieceUpdated NextPieceUpdated;
 
-   public float tps = 2;
+   public float tps = 1;
 
    public OnSquareAdded OnSquareAdded;
    public OnSquareMoved OnSquareMoved;
    public OnSquareRemoved OnSquareRemoved;
+   public LinesCleared OnLinesCleared;
    private static PieceBag pieceBag;
+   public bool Paused;
    public static TetrisShape NextPiece
    {
       get; private set;
@@ -36,6 +39,7 @@ public class TetrisGame
       OnSquareAdded = new OnSquareAdded();
       OnSquareMoved = new OnSquareMoved();
       OnSquareRemoved = new OnSquareRemoved();
+      OnLinesCleared = new LinesCleared();
       NextPieceUpdated ??= new NextPieceUpdated();
       board.SquareMoved.AddListener((a, b) => OnSquareMoved.Invoke(a, b));
       board.SquareRemoved.AddListener(s => OnSquareRemoved.Invoke(s));
@@ -74,6 +78,10 @@ public class TetrisGame
    {
       while (!GameOver)
       {
+         if (Paused)
+         {
+            yield return new WaitForSeconds(1f / tps);
+         }
          if (ActivePiece is not null)
          {
             if (MovePieceDown())
@@ -95,7 +103,11 @@ public class TetrisGame
                   GameOver = true;
                }
             }
-            board.CheckForTetris();
+            int lines = board.CheckForTetris();
+            if(lines > 0)
+            {
+               OnLinesCleared.Invoke(lines);
+            }
          }
          yield return new WaitForSeconds(1f / tps);
       }

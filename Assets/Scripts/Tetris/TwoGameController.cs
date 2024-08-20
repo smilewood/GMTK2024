@@ -1,16 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class TwoGameController : MonoBehaviour
 {
    public TetrisGameView LeftGame, RightGame;
    public bool LeftGameActive;
-
+   public TMP_Text ScoreText, gameoverscore;
+   private int CombinedScore;
    // Start is called before the first frame update
    void Start()
    {
-      RestartGame();
+      //RestartGame();
+      LeftGame.OnScoreUpdate.AddListener(UpdateScore);
+      RightGame.OnScoreUpdate.AddListener(UpdateScore);
    }
 
    private TetrisGameView ActiveGame => LeftGameActive ? LeftGame : RightGame;
@@ -50,8 +54,17 @@ public class TwoGameController : MonoBehaviour
       }
    }
 
+   public void UpdateScore(int scoreChange)
+   {
+      CombinedScore += scoreChange;
+      ScoreText.text = CombinedScore.ToString();
+      gameoverscore.text = CombinedScore.ToString();
+   }
+
    public void RestartGame()
    {
+      CombinedScore = 0;
+      UpdateScore(0);
       ActiveGame.RemoveAllBoxes();
       ActiveGame.RemoveActivePiece();
       InactiveGame.RemoveAllBoxes();
@@ -60,5 +73,11 @@ public class TwoGameController : MonoBehaviour
       TetrisGame.GameOver = false;
       ActiveGame.StartGame();
       InactiveGame.StartGame();
+   }
+
+   public void PauseGames(bool pause)
+   {
+      ActiveGame.PauseGame(pause);
+      InactiveGame.PauseGame(pause);
    }
 }

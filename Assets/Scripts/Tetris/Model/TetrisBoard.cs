@@ -38,8 +38,9 @@ public class TetrisBoard
       ++filledSquares;
    }
 
-   public void CheckForTetris()
+   public int CheckForTetris()
    {
+      int clearedLines = 0;
       for(int i = 0; i < BoardSize.y; ++i)
       {
          //Check row for spaces
@@ -55,6 +56,7 @@ public class TetrisBoard
          //No spaces found
          if (rowComplete)
          {
+            ++clearedLines;
             //Remove the row
             for (int j = 0; j < BoardSize.x; ++j)
             {
@@ -77,6 +79,7 @@ public class TetrisBoard
             --i;
          }
       }
+      return clearedLines;
    }
 
    public void ClearBoard()
